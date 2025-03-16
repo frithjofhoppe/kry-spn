@@ -14,8 +14,10 @@ public class Main {
 //        var y = 0b1101_1110_1011_0100;
 //        System.out.println(res == y);
 
-        var spn = new SPN();
-        var original = 0b0101_1001_0101_1100;
+        var spn = new SPN("00010001001010001000110000000000");
+        var original = 0b0001_0010_1000_1111;
+        var y = 0b1010_1110_1011_0100;
+        spn.encrypt(original);
 //        var encrypted = spn.encrypt(original);
 //        System.out.println(">>>>>>>>>>>>>>>>");
 //        var decrypted = spn.decrypt(encrypted);
@@ -23,10 +25,16 @@ public class Main {
 
 //        System.out.println(Encryption.convertFromPaddedBitString(Encryption.convertToPaddedBitString("hel")).equals("hel"));
 
-        var y = Encryption.encrypt("B");
-        System.out.println(y);
-        var x = Encryption.decrypt(y);
-        System.out.println(x);
+//        var content = "00000100110100100000101110111000000000101000111110001110011111110110000001010001010000111010000000010011011001110010101110110000";
+//          System.out.println(Encryption.decrypt(content));
+
+        System.out.println(Encryption.decrypt(Encryption.encrypt("hello")).equals("hello"));
+
+//        var y = Encryption.encrypt("hello");
+//        System.out.println(y);
+//        var x = Encryption.decrypt(y);
+//        System.out.println("--- end ---");
+//        System.out.println(x);
     }
 
     private static String toBitString (int in) {
@@ -68,7 +76,7 @@ public class Main {
                 var contentToEncrypt = (initialY + i) % 2^chunkLength;
                 var startOfSection = i*chunkLength;
                 var y = Integer.parseInt(encryptedRaw.substring(startOfSection,startOfSection+chunkLength),2);
-                var x = spn.decrypt(contentToEncrypt)  ^ y;
+                var x = spn.encrypt(contentToEncrypt)  ^ y;
                 buffer.append(toBitString(x));
             }
 

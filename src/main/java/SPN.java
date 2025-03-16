@@ -3,6 +3,7 @@ import java.util.function.Function;
 public class SPN {
     private final int rounds = 4;
     private final int keyLength = 16;
+
     private String key = "00111010100101001101011000111111";
 
     public SPN(String key) {
