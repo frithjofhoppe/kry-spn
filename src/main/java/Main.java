@@ -3,38 +3,25 @@ import java.util.Random;
 
 public class Main {
 
-    String chiffre = "00000100110100100000101110111000000000101000111110001110011111110110000001010001010000111010000000010011011001110010101110110000";
+    public static String chiffre = "00000100110100100000101110111000000000101000111110001110011111110110000001010001010000111010000000010011011001110010101110110000";
 
     public static void main(String[] args) {
-
-//        var spn = new SPN("00010001001010001000110000000000");
-//        var res = spn.encrypt(0b0001_0010_1000_1111);
-//        System.out.println(">>>>>>>>>>>>>>>>");
-//        var resy = spn.decrypt(res);
-//        var y = 0b1101_1110_1011_0100;
-//        System.out.println(res == y);
-
+        // Sample to test from exercise
         var spn = new SPN("00010001001010001000110000000000");
-        var original = 0b0001_0010_1000_1111;
-        var y = 0b1010_1110_1011_0100;
-        spn.encrypt(original);
-//        var encrypted = spn.encrypt(original);
-//        System.out.println(">>>>>>>>>>>>>>>>");
-//        var decrypted = spn.decrypt(encrypted);
-//        System.out.println(original == decrypted);
+        var yExpected = 0b1010_1110_1011_0100;
+        var yActual = spn.encrypt(0b0001_0010_1000_1111);
+        System.out.println(yActual == yExpected);
 
-//        System.out.println(Encryption.convertFromPaddedBitString(Encryption.convertToPaddedBitString("hel")).equals("hel"));
-
-//        var content = "00000100110100100000101110111000000000101000111110001110011111110110000001010001010000111010000000010011011001110010101110110000";
-//          System.out.println(Encryption.decrypt(content));
-
+        // Check if encrypting and decrypting leads to the same content
         System.out.println(Encryption.decrypt(Encryption.encrypt("hello")).equals("hello"));
 
-//        var y = Encryption.encrypt("hello");
-//        System.out.println(y);
-//        var x = Encryption.decrypt(y);
-//        System.out.println("--- end ---");
-//        System.out.println(x);
+        // Chiffre from exercise
+        var expected = "Gut gemacht!";
+        var actual = Encryption.decrypt(chiffre);
+        System.out.println("-----");
+        System.out.println(">>> Expected: " + expected);
+        System.out.println(">>> Actual: " + actual);
+        System.out.println(">>> Compare decrypted to encrypted: " + actual.equals(expected));
     }
 
     private static String toBitString (int in) {
@@ -55,7 +42,8 @@ public class Main {
             buffer.append(toBitString(initialY));
 
             for(int i = 0; i< paddedInput.length()/chunkLength; i++) {
-                var contentToEncrypt = (initialY + i) % 2^chunkLength;
+                System.out.println(">> Chunk " + i);
+                var contentToEncrypt = (initialY + i) % (1<<chunkLength);
                 var startOfSection = i*chunkLength;
                 var x = paddedInput.substring(startOfSection,startOfSection+chunkLength);
                 var encrypted = spn.encrypt(contentToEncrypt) ^ Integer.parseInt(x,2);
@@ -73,7 +61,8 @@ public class Main {
             System.out.println(toBitString(initialY) + " RANDOM");
             var encryptedRaw = encrypted.substring(chunkLength);
             for(int i = 0; i<encryptedRaw.length()/chunkLength; i++) {
-                var contentToEncrypt = (initialY + i) % 2^chunkLength;
+                System.out.println(">> Chunk "+i);
+                var contentToEncrypt = (initialY + i) % (1<<chunkLength);
                 var startOfSection = i*chunkLength;
                 var y = Integer.parseInt(encryptedRaw.substring(startOfSection,startOfSection+chunkLength),2);
                 var x = spn.encrypt(contentToEncrypt)  ^ y;

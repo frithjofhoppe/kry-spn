@@ -1,7 +1,7 @@
 import java.util.function.Function;
 
 public class SPN {
-    private final int rounds = 4;
+    private final int rounds = 5;
     private final int keyLength = 16;
 
     private String key = "00111010100101001101011000111111";
@@ -19,10 +19,6 @@ public class SPN {
             {0,0},{1,4},{2,8},{3,12},{4,1},{5,5},{6,9},{7,13},{8,2},{9,6},{10,10},{11,14},{12,3},{13,7},{14,11},{15,15}
     };
 
-//    private void print(int in, String identifier) {
-//        System.out.println(String.format("%16s", Integer.toBinaryString(in)).replace(' ', '0') + " " + identifier);
-//    }
-
     private void print(int in, String identifier) {
         String binaryString = String.format("%16s", Integer.toBinaryString(in)).replace(' ', '0');
 
@@ -35,7 +31,7 @@ public class SPN {
             formattedBinary.append(binaryString.charAt(i));
         }
 
-//        System.out.println(formattedBinary + " " + identifier);
+        System.out.println(formattedBinary + " " + identifier);
     }
 
     int encrypt(int decrypted) {
@@ -116,20 +112,20 @@ public class SPN {
         var mask1 = input & 0b1111_0000_0000_0000;
         var shift1 = getMappingValue.apply(mask1 >> 12) << 12;
 
-        var mask2 = input & 0b0000_1111_0000_0000;
+        var mask2 = input & 0b1111_0000_0000;
         var shift2 = getMappingValue.apply(mask2 >> 8) << 8;
 
-        var mask3 = input & 0b0000_0000_1111_0000;
+        var mask3 = input & 0b0000_1111_0000;
         var shift3 = getMappingValue.apply(mask3 >> 4) << 4;
 
-        var mask4 = input & 0b0000_0000_0000_1111;
+        var mask4 = input & 0b0000_0000_1111;
         var shift4 = getMappingValue.apply(mask4);
 
         return shift1 | shift2 | shift3 | shift4;
     }
 
     private int getRoundKey(int i) {
-        var k = key.substring(4*i, i+keyLength);
+        var k = key.substring(4*i, 4*i+keyLength);
         return Integer.parseInt(k, 2);
     }
 
