@@ -34,7 +34,7 @@ public class SPN {
             formattedBinary.append(binaryString.charAt(i));
         }
 
-        System.out.println(formattedBinary + " " + identifier);
+//        System.out.println(formattedBinary + " " + identifier);
     }
 
     int encrypt(int decrypted) {

@@ -1,36 +1,105 @@
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.CharBuffer;
+import java.util.Random;
 
 public class Main {
 
     String chiffre = "00000100110100100000101110111000000000101000111110001110011111110110000001010001010000111010000000010011011001110010101110110000";
 
     public static void main(String[] args) {
-        System.out.println("Hello World!");
 
 //        var spn = new SPN("00010001001010001000110000000000");
-//
 //        var res = spn.encrypt(0b0001_0010_1000_1111);
 //        System.out.println(">>>>>>>>>>>>>>>>");
 //        var resy = spn.decrypt(res);
 //        var y = 0b1101_1110_1011_0100;
 //        System.out.println(res == y);
+
         var spn = new SPN();
-        var original = 0b0111_1010_0101_1100;
-        var encrypted = spn.encrypt(original);
-        System.out.println(">>>>>>>>>>>>>>>>");
-        var decrypted = spn.decrypt(encrypted);
-        System.out.println(original == decrypted);
+        var original = 0b0101_1001_0101_1100;
+//        var encrypted = spn.encrypt(original);
+//        System.out.println(">>>>>>>>>>>>>>>>");
+//        var decrypted = spn.decrypt(encrypted);
+//        System.out.println(original == decrypted);
+
+//        System.out.println(Encryption.convertFromPaddedBitString(Encryption.convertToPaddedBitString("hel")).equals("hel"));
+
+        var y = Encryption.encrypt("B");
+        System.out.println(y);
+        var x = Encryption.decrypt(y);
+        System.out.println(x);
+    }
+
+    private static String toBitString (int in) {
+        return String.format("%16s", Integer.toBinaryString(in)).replace(' ', '0');
     }
 
     public static class Encryption {
-        private static Map<Integer, Integer> encryptions = new HashMap<>();
+        private static final int chunkLength = 16;
 
-        static String encrypt(String input) {
-            var paddedInput = convertToPaddedBitString(input);
+        static String encrypt(String decrypted) {
+            var buffer = new StringBuilder();
+            var paddedInput = convertToPaddedBitString(decrypted);
             var spn = new SPN();
-            return "";
+            var initialY = generateRandomKey();
+            System.out.println(toBitString(initialY) + " RANDOM");
+
+            // Add random key at the beginning
+            buffer.append(toBitString(initialY));
+
+            for(int i = 0; i< paddedInput.length()/chunkLength; i++) {
+                var contentToEncrypt = (initialY + i) % 2^chunkLength;
+                var startOfSection = i*chunkLength;
+                var x = paddedInput.substring(startOfSection,startOfSection+chunkLength);
+                var encrypted = spn.encrypt(contentToEncrypt) ^ Integer.parseInt(x,2);
+                buffer.append(toBitString(encrypted));
+            }
+
+            return buffer.toString();
         }
+
+        static String decrypt(String encrypted) {
+            if(encrypted.length()%chunkLength != 0) throw new IllegalArgumentException("Has to be %16");
+            var spn = new SPN();
+            var buffer = new StringBuilder();
+            var initialY = Integer.parseInt(encrypted.substring(0,chunkLength),2);
+            System.out.println(toBitString(initialY) + " RANDOM");
+            var encryptedRaw = encrypted.substring(chunkLength);
+            for(int i = 0; i<encryptedRaw.length()/chunkLength; i++) {
+                var contentToEncrypt = (initialY + i) % 2^chunkLength;
+                var startOfSection = i*chunkLength;
+                var y = Integer.parseInt(encryptedRaw.substring(startOfSection,startOfSection+chunkLength),2);
+                var x = spn.decrypt(contentToEncrypt)  ^ y;
+                buffer.append(toBitString(x));
+            }
+
+            return convertFromPaddedBitString(buffer.toString());
+        }
+
+        private static int generateRandomKey() {
+            Random random = new Random();
+            return random.nextInt(65536);
+        }
+
+        private static String convertFromPaddedBitString(String bitString) {
+            // Remove trailing '0's until the first '1' is encountered
+            int lastOneIndex = bitString.lastIndexOf('1');
+            if (lastOneIndex == -1) {
+                throw new IllegalArgumentException("Invalid padded bit string: no '1' found.");
+            }
+
+            String trimmedBitString = bitString.substring(0, lastOneIndex);
+
+            // Convert the bit string back to characters (8 bits per character)
+            StringBuilder text = new StringBuilder();
+            for (int i = 0; i < trimmedBitString.length(); i += 8) {
+                String byteString = trimmedBitString.substring(i, Math.min(i + 8, trimmedBitString.length()));
+                char c = (char) Integer.parseInt(byteString, 2);
+                text.append(c);
+            }
+
+            return text.toString();
+        }
+
 
         private static String convertToPaddedBitString(String text) {
             StringBuilder bitString = new StringBuilder();
@@ -55,85 +124,4 @@ public class Main {
             return bitString.toString();
         }
     }
-
-//    public class SPN {
-//        private final int rounds = 4;
-//        private final String key = "00111010100101001101011000111111";
-//        private final int keyLength = 16;
-//        private static final int[][] sBox = {
-//                {0x0, 0xE}, {0x1, 0x4}, {0x2, 0xD}, {0x3, 0x1}, {0x4, 0x2}, {0x5, 0xF}, {0x6, 0xB}, {0x7, 0x8}, {0x8, 0x3}, {0x9, 0xA}, {0xA, 0x6}, {0xB, 0xC}, {0xC, 0x5}, {0xD, 0x9}, {0xE, 0x0}, {0xF, 0x7}
-//        };
-//        private static final int[][] permutation = {
-//                {0,0},{1,4},{2,8},{3,12},{4,1},{5,5},{6,9},{7,13},{8,2},{9,6},{10,10},{11,14},{12,3},{13,7},{14,11},{15,15}
-//        };
-//
-//        int encrypt(int decrypted) {
-//            // 0. Runde, Weissrunde
-//            var firstKeyApplied = decrypted ^ getRoundKey(0);
-//
-//            // 1. to r-1 Runden
-//            var output = firstKeyApplied;
-//            for(int i = 1; i <rounds-1; i++) {
-//                var sBoxIterApplied = applySBox(output);
-//                var betaIterApplied = applyPermutation(sBoxIterApplied);
-//                output = getRoundKey(i) ^ betaIterApplied;
-//            }
-//
-//            // Verkürzte Runde
-//            var sBoxApplied = applySBox(output);
-//            var lastKeyApplied = sBoxApplied ^ getRoundKey(rounds-1);
-//            return lastKeyApplied;
-//        }
-//
-//        private int runRound(int input, int i) {
-//            var sBoxParse = applySBox(input);
-//            return 0;
-//        }
-//
-//        private int applyPermutation(int input) {
-//            var output = new String[keyLength];
-//            var inputBitString = String.format("%16s", Integer.toBinaryString(input)).replace(' ', '0');
-//            for(int i = 0; i < keyLength; i++) {
-//                var permutPos = getPermutationValue(i);
-//                output[permutPos] = String.valueOf(inputBitString.charAt(i));
-//            }
-//            var outputBitString = String.join("", output);
-//            return Integer.parseInt(outputBitString, 2);
-//        }
-//
-//        private int applySBox(int input) {
-//            var mask1 = input & 0b1111_0000_0000_0000;
-//            var shift1 = getSBoxValue(mask1 >> 12) << 12;
-//
-//            var mask2 = input & 0b0000_1111_0000_0000;
-//            var shift2 = getSBoxValue(mask2 >> 8) << 8;
-//
-//            var mask3 = input & 0b1111_0000_1111_0000;
-//            var shift3 = getSBoxValue(mask3 >> 4) << 4;
-//
-//            var mask4 = input & 0b1111_0000_0000_1111;
-//            var shift4 = getSBoxValue(mask4);
-//
-//            return shift1 | shift2 | shift3 | shift4;
-//        }
-//
-//        private int getRoundKey(int i) {
-//            var k = key.substring(4*i, i+keyLength);
-//            return Integer.parseInt(k, 2);
-//        }
-//
-//        private int getSBoxValue(int searchValue) {
-//            for (int[] box : sBox) {
-//                if (box[0] == searchValue) return box[1];
-//            }
-//            throw new IllegalArgumentException("Value not found");
-//        }
-//
-//        private int getPermutationValue(int searchValue) {
-//            for (int[] box : permutation) {
-//                if (box[0] == searchValue) return box[1];
-//            }
-//            throw new IllegalArgumentException("Value not found");
-//        }
-//    }
 }
