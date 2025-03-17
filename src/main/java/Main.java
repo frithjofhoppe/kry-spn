@@ -80,6 +80,7 @@ public class Main {
         }
 
         private static int generateRandomKey() {
+            // Random key with max value of 0b1111_1111_1111_1111 -> 16 bits
             Random random = new Random();
             return random.nextInt(65536);
         }

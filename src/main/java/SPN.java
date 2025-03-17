@@ -46,7 +46,7 @@ public class SPN {
             System.out.println("Round " + i);
             var sBoxIterApplied = applySBox(output, this::getSBoxValue);
             print(sBoxIterApplied, "sBox");
-            var betaIterApplied = applyPermutation(sBoxIterApplied);
+            var betaIterApplied = applyBitPermutation(sBoxIterApplied);
             print(betaIterApplied, "beta");
             print(getRoundKey(i), "k"+i);
             output = getRoundKey(i) ^ betaIterApplied;
@@ -68,7 +68,7 @@ public class SPN {
         var firstKeyApplied = encrypted ^ getRoundKey(rounds-1);
         print(encrypted, "input");
         print(getRoundKey(rounds-1), "k"+(rounds-1));
-        print(applyPermutation(getRoundKey(rounds-1)), "+"+(rounds-1)+"'");
+        print(applyBitPermutation(getRoundKey(rounds-1)), "+"+(rounds-1)+"'");
         print(firstKeyApplied, "after k"+(rounds-1));
 
         //r-1. to 1 Runden
@@ -78,10 +78,10 @@ public class SPN {
             System.out.println("Round " + i);
             var sBoxIterApplied = applySBox(output, this::getSBoxInversed);
             print(sBoxIterApplied, "sBox");
-            var betaIterApplied = applyPermutation(sBoxIterApplied);
+            var betaIterApplied = applyBitPermutation(sBoxIterApplied);
             print(betaIterApplied, "beta");
             print(getRoundKey(i), "k"+i);
-            output = applyPermutation(getRoundKey(i)) ^ betaIterApplied;
+            output = applyBitPermutation(getRoundKey(i)) ^ betaIterApplied;
             print(output, "+ k"+i);
         }
 
@@ -95,28 +95,34 @@ public class SPN {
         return lastKeyApplied;
     }
 
-    private int applyPermutation(int input) {
+    private int applyBitPermutation(int input) {
         var output = new String[keyLength];
         var inputBitString = String.format("%16s", Integer.toBinaryString(input)).replace(' ', '0');
         for(int i = 0; i < keyLength; i++) {
-            var permutPos = getPermutationValue(i);
-            output[permutPos] = String.valueOf(inputBitString.charAt(i));
+            var permutationPos = getPermutationValue(i);
+            output[permutationPos] = String.valueOf(inputBitString.charAt(i));
         }
         var outputBitString = String.join("", output);
         return Integer.parseInt(outputBitString, 2);
     }
 
     private int applySBox(int input, Function<Integer,Integer> getMappingValue) {
+        // Idea is here to process each block of 4 bits independent of each other by first
+        // removing everything but the 4 bits in question by using bit masking -> bitweise AND,
+        // then mapping it by using the sbox and eventually
+        // "merging" them by using the bitwise OR
+
+        // This example works for input which is 16 bits long
         var mask1 = input & 0b1111_0000_0000_0000;
         var shift1 = getMappingValue.apply(mask1 >> 12) << 12;
 
         var mask2 = input & 0b1111_0000_0000;
         var shift2 = getMappingValue.apply(mask2 >> 8) << 8;
 
-        var mask3 = input & 0b0000_1111_0000;
+        var mask3 = input & 0b1111_0000;
         var shift3 = getMappingValue.apply(mask3 >> 4) << 4;
 
-        var mask4 = input & 0b0000_0000_1111;
+        var mask4 = input & 0b1111;
         var shift4 = getMappingValue.apply(mask4);
 
         return shift1 | shift2 | shift3 | shift4;
