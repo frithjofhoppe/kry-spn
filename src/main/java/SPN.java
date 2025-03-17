@@ -4,6 +4,7 @@ public class SPN {
     private final int rounds = 5;
     private final int keyLength = 16;
 
+    // Key from exercise
     private String key = "00111010100101001101011000111111";
 
     public SPN(String key) {
@@ -21,8 +22,6 @@ public class SPN {
 
     private void print(int in, String identifier) {
         String binaryString = String.format("%16s", Integer.toBinaryString(in)).replace(' ', '0');
-
-        // Insert spaces every 4 bits
         StringBuilder formattedBinary = new StringBuilder();
         for (int i = 0; i < binaryString.length(); i++) {
             if (i > 0 && i % 4 == 0) {
@@ -30,7 +29,6 @@ public class SPN {
             }
             formattedBinary.append(binaryString.charAt(i));
         }
-
         System.out.println(formattedBinary + " " + identifier);
     }
 

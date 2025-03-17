@@ -33,6 +33,7 @@ public class Main {
 
         static String encrypt(String decrypted) {
             var buffer = new StringBuilder();
+            // Add padding 1000..
             var paddedInput = convertToPaddedBitString(decrypted);
             var spn = new SPN();
             var initialY = generateRandomKey();
@@ -43,9 +44,11 @@ public class Main {
 
             for(int i = 0; i< paddedInput.length()/chunkLength; i++) {
                 System.out.println(">> Chunk " + i);
+                // Calculate (y_-1 + i) mod 2^l
                 var contentToEncrypt = (initialY + i) % (1<<chunkLength);
                 var startOfSection = i*chunkLength;
                 var x = paddedInput.substring(startOfSection,startOfSection+chunkLength);
+                // E(.., k) xor x_i to encrypt
                 var encrypted = spn.encrypt(contentToEncrypt) ^ Integer.parseInt(x,2);
                 buffer.append(toBitString(encrypted));
             }
@@ -57,18 +60,22 @@ public class Main {
             if(encrypted.length()%chunkLength != 0) throw new IllegalArgumentException("Has to be %16");
             var spn = new SPN();
             var buffer = new StringBuilder();
+            // Remove first chunk which represents y_-1
             var initialY = Integer.parseInt(encrypted.substring(0,chunkLength),2);
             System.out.println(toBitString(initialY) + " RANDOM");
             var encryptedRaw = encrypted.substring(chunkLength);
             for(int i = 0; i<encryptedRaw.length()/chunkLength; i++) {
                 System.out.println(">> Chunk "+i);
+                // Calculate (y_-1 + i) mod 2^l
                 var contentToEncrypt = (initialY + i) % (1<<chunkLength);
                 var startOfSection = i*chunkLength;
                 var y = Integer.parseInt(encryptedRaw.substring(startOfSection,startOfSection+chunkLength),2);
+                // E(.., k) xor x_i to decrypt
                 var x = spn.encrypt(contentToEncrypt)  ^ y;
                 buffer.append(toBitString(x));
             }
 
+            // Remove padding 10000.. etc
             return convertFromPaddedBitString(buffer.toString());
         }
 
@@ -77,6 +84,9 @@ public class Main {
             return random.nextInt(65536);
         }
 
+        /*
+        This function has been generated with AI
+        */
         private static String convertFromPaddedBitString(String bitString) {
             // Remove trailing '0's until the first '1' is encountered
             int lastOneIndex = bitString.lastIndexOf('1');
@@ -98,6 +108,9 @@ public class Main {
         }
 
 
+        /*
+            This function has been generated with AI
+         */
         private static String convertToPaddedBitString(String text) {
             StringBuilder bitString = new StringBuilder();
 
